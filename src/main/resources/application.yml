@@ -1,0 +1,25 @@
+
+netty:
+  server:
+    port: 9999
+    broadcast: true
+    workerThreads: 4
+
+
+vertx:
+  pg:
+    host: 127.0.0.1
+    port: 5432
+    database: mygame
+    username: root
+    password: example
+    max-pool-size: 10
+
+
+
+reactor:
+  blocking-scheduler:
+    max-threads: 100
+    max-queue-size: 100000
+    thread-name-prefix: default-reactor-worker
+    ttl-seconds: 60

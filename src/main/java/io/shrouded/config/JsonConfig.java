@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,5 +23,11 @@ public class JsonConfig {
         mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         return mapper;
+    }
+
+    @Bean
+    public Validator validator() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        return factory.getValidator();
     }
 }

@@ -1,4 +1,4 @@
-package io.shrouded.recievers.request;
+package io.shrouded.recievers;
 
 public interface PayloadMessageRequest {
 }

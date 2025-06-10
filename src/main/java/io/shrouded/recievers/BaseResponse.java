@@ -1,8 +1,8 @@
-package io.shrouded.recievers.response;
+package io.shrouded.recievers;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.shrouded.recievers.ping.PongMessageResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -16,15 +16,5 @@ public class BaseResponse<T extends PayloadMessageResponse> {
     private final ResponseMessageType type;
     private final int status;
     private final String message;
-
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.NAME,
-            include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
-            property = "type"
-    )
-    @JsonSubTypes({
-            @JsonSubTypes.Type(value = PongMessageResponse.class, name = "pong")
-            // Add other subtypes here as needed
-    })
     private final T payload;
 }

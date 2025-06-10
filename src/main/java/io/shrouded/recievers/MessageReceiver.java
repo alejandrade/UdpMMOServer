@@ -1,9 +1,8 @@
 package io.shrouded.recievers;
 
-import io.shrouded.udpConnectionHelper;
-import io.shrouded.recievers.request.PayloadMessageRequest;
-import io.shrouded.recievers.response.PayloadMessageResponse;
+import io.shrouded.UdpConnectionHelper;
 
 public interface MessageReceiver<T extends PayloadMessageRequest, R extends PayloadMessageResponse> {
-    void handle(String requestId, T payloadMessage, udpConnectionHelper publisherHelper);
+    void handle(String requestId, T payloadMessage, UdpConnectionHelper publisherHelper);
+    boolean isPrivate();
 }

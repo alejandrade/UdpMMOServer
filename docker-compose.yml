@@ -1,17 +1,31 @@
 version: '3.8'
 
 services:
-  mongo:
-    image: mongo:latest
-    container_name: mongodb
+  postgres:
+    image: postgres:17.5
+    container_name: postgresdb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "5432:5432"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: mygame
     volumes:
-      - mongo-data:/data/db
+      - postgres-data:/var/lib/postgresql/data
+
+  flyway:
+    image: flyway/flyway:latest
+    container_name: flyway
+    depends_on:
+      - postgres
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql
+    command: >
+      -url=jdbc:postgresql://postgres:5432/mygame
+      -user=root
+      -password=example
+      migrate
 
 volumes:
-  mongo-data:
+  postgres-data:

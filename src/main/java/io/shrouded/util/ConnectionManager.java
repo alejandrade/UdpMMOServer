@@ -17,7 +17,7 @@ public class ConnectionManager {
     private final ConcurrentHashMap<InetSocketAddress, PlayerId> idByAddress = new ConcurrentHashMap<>();
     private final Duration expirationDuration = Duration.ofMinutes(2);
 
-    public void register(PlayerId playerId, InetSocketAddress address) {
+    public void addConnection(PlayerId playerId, InetSocketAddress address) {
         RegisteredClient client = new RegisteredClient(playerId, address, Instant.now());
         usersById.put(playerId, client);
         idByAddress.put(address, playerId);
@@ -38,6 +38,10 @@ public class ConnectionManager {
     public RegisteredClient getUserByAddress(InetSocketAddress address) {
         PlayerId id = idByAddress.get(address);
         return id != null ? usersById.get(id) : null;
+    }
+
+    public boolean userLoggedIn(InetSocketAddress address) {
+        return getUserByAddress(address) != null;
     }
 
     public RegisteredClient getUser(PlayerId playerId) {

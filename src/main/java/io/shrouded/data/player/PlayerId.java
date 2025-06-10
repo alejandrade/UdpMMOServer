@@ -1,5 +1,8 @@
 package io.shrouded.data.player;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public record PlayerId(String value) {
 
     public PlayerId {
@@ -8,11 +11,13 @@ public record PlayerId(String value) {
         }
     }
 
+    @JsonCreator
     public static PlayerId of(String value) {
         return new PlayerId(value);
     }
 
     @Override
+    @JsonValue
     public String toString() {
         return value;
     }
