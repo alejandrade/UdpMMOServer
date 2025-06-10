@@ -1,0 +1,91 @@
+# UdpMmoServer
+
+**UdpMmoServer** is a backend server built with Java 21, Spring Boot, and Gradle, designed to support real-time multiplayer networking over UDP. It is ideal for building large-scale online games, inspired by architectures used in MMORPGs like *World of Warcraft*.
+
+This is a **passion project by ShroudedApp LLC**, created to help video game developers — indie or professional — build their own massively multiplayer online role-playing games. UdpMmoServer provides a scalable, extensible backend foundation focused on player state management, networking, and performance.
+
+---
+
+## 🚀 Features
+
+- Java 21 with Spring Boot
+- Reactive, non-blocking architecture
+- Low-latency UDP networking
+- Docker Compose support for local dev
+- Modular design for MMORPG features
+
+---
+
+## 📦 Requirements
+
+- Java 21+
+- Gradle 8+
+- Docker
+- Docker Compose
+
+---
+
+## 🛠️ Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/shroudedapp/UdpMmoServer.git
+cd UdpMmoServer
+```
+
+### 2. Start Dependencies
+
+```bash
+docker compose up -d
+```
+
+This starts all necessary services defined in `docker-compose.yml` (e.g., MongoDB, Redis, etc.).
+
+### 3. Run the Server
+
+#### Option A: Use Gradle
+
+```bash
+./gradlew bootRun
+```
+
+#### Option B: Build and Run JAR
+
+```bash
+./gradlew clean build
+java -jar build/libs/udpmmoserver-*.jar
+```
+
+---
+
+## 🧪 Running Tests
+
+```bash
+./gradlew test
+```
+
+---
+
+## 📁 Project Structure
+
+```text
+UdpMmoServer/
+├── src/
+│   └── main/
+│       ├── java/         # Core source code
+│       └── resources/    # Configuration files
+├── docker-compose.yml    # External service definitions
+├── build.gradle          # Gradle build script
+├── settings.gradle
+└── README.md
+```
+
+---
+
+## 📝 License
+
+This project is licensed under the [Apache License 2.0](./LICENSE)
+© 2025 ShroudedApp LLC.
+
+---
