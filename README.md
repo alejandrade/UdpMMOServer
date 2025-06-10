@@ -31,8 +31,8 @@ This is a **passion project by ShroudedApp LLC**, created to help video game dev
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/shroudedapp/UdpMmoServer.git
-cd UdpMmoServer
+git clone https://github.com/alejandrade/UdpMMOServer.git
+cd UdpMMOServer
 ```
 
 ### 2. Start Dependencies
