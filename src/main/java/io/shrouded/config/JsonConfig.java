@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.annotation.PreDestroy;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
@@ -13,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class JsonConfig {
+
+    private ValidatorFactory validatorFactory;
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -27,7 +30,14 @@ public class JsonConfig {
 
     @Bean
     public Validator validator() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        return factory.getValidator();
+        this.validatorFactory = Validation.buildDefaultValidatorFactory();
+        return validatorFactory.getValidator();
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        if (validatorFactory != null) {
+            validatorFactory.close();
+        }
     }
 }

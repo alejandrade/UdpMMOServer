@@ -1,9 +1,13 @@
-package io.shrouded.data.world;
+package io.shrouded.data.state;
 
 import java.io.Serializable;
+import java.time.Instant;
 
 public interface WorldObject extends Serializable {
-    WorldObjectId getId(); // or any shared contract
+    WorldObjectStateId getId(); // or any shared contract
+
+    Instant getLastUpdate();
+
     @SuppressWarnings("unchecked")
     default <T extends WorldObject> T ofType(Class<T> clazz) {
         if (!clazz.isInstance(this)) {

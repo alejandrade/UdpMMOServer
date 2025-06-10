@@ -39,8 +39,7 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion")
 
     // Hazelcast
-    implementation("com.hazelcast:hazelcast:$hazelcastVersion")
-    implementation("com.hazelcast:hazelcast-spring:$hazelcastVersion")
+    implementation("io.lettuce:lettuce-core:6.7.1.RELEASE")
 
     // Netty
     implementation("io.netty:netty-all:$nettyVersion")

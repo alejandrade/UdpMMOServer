@@ -1,4 +1,4 @@
-package io.shrouded.data.world;
+package io.shrouded.data.state;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

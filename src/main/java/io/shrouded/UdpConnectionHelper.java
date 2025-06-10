@@ -6,7 +6,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.CharsetUtil;
-import io.shrouded.data.player.PlayerId;
+import io.shrouded.data.entity.player.PlayerId;
 import io.shrouded.recievers.BaseResponse;
 import io.shrouded.recievers.ResponseMessageType;
 import io.shrouded.util.ConnectionManager;

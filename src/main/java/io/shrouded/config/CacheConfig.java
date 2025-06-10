@@ -1,51 +1,46 @@
 package io.shrouded.config;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.MapConfig;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.IMap;
-import io.shrouded.data.world.WorldObject;
-import io.shrouded.data.world.WorldObjectId;
-import io.shrouded.data.world.GridCellId;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulRedisConnection;
 import io.shrouded.util.MDCUtil;
-import org.springframework.beans.factory.annotation.Qualifier;
+import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.Set;
-
 @Configuration
 public class CacheConfig {
 
+    private RedisClient redisClient;
+    private StatefulRedisConnection<String, String> redisConnection;
+    private Scheduler blockingScheduler;
+
     @Bean
-    public HazelcastInstance hazelcastInstance() {
-        Config config = new Config();
-        config.setInstanceName("game-instance");
+    public RedisClient redisClient(
+            @Value("${redis.host:localhost}") String host,
+            @Value("${redis.port:6379}") int port,
+            @Value("${redis.password:}") String password,
+            @Value("${redis.database:0}") int database
+    ) {
+        RedisURI uri = RedisURI.Builder.redis(host, port)
+                .withDatabase(database)
+                .withPassword(password.isEmpty() ? null : password.toCharArray())
+                .build();
 
-        // Default configuration applied to all maps unless overridden
-        config.getMapConfig("default")
-                .setTimeToLiveSeconds(0) // no TTL
-                .setBackupCount(1);      // 1 backup copy per entry
+        RedisClient client = RedisClient.create(uri);
 
-        config.addMapConfig(new MapConfig(CacheKey.GRID_SPATIAL_INDEX_CACHE)
-                .setTimeToLiveSeconds(0)
-                .setBackupCount(1));
+        // Test connection at startup
+        try (StatefulRedisConnection<String, String> connection = client.connect()) {
+            connection.sync().ping(); // Will throw if connection fails
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to connect to Redis at startup", ex);
+        }
 
-        config.addMapConfig(new MapConfig(CacheKey.VOLATILE_CACHE)
-                .setTimeToLiveSeconds(0)
-                .setBackupCount(1));
-
-        config.addMapConfig(new MapConfig(CacheKey.SQL_QUERY_CACHE)
-                .setTimeToLiveSeconds(600));
-
-        return Hazelcast.newHazelcastInstance(config);
+        return client;
     }
-
-
     @Bean
     public Scheduler defaultBlockingScheduler(
             @Value("${reactor.blocking-scheduler.max-threads:100}") int maxThreads,
@@ -53,21 +48,22 @@ public class CacheConfig {
             @Value("${reactor.blocking-scheduler.thread-name-prefix:reactor-worker}") String threadNamePrefix,
             @Value("${reactor.blocking-scheduler.ttl-seconds:60}") int ttlSeconds
     ) {
-        Scheduler scheduler = Schedulers.newBoundedElastic(maxThreads, maxQueueSize,
+        this.blockingScheduler = Schedulers.newBoundedElastic(maxThreads, maxQueueSize,
                 MDCUtil.mdcThreadFactory(threadNamePrefix), ttlSeconds);
-        scheduler.init();
-        return scheduler;
+        blockingScheduler.init();
+        return this.blockingScheduler;
     }
 
-    @Bean
-    @Qualifier("gridSpatialIndex")
-    public IMap<GridCellId, Set<WorldObjectId>> gridSpatialIndex(HazelcastInstance instance) {
-        return instance.getMap(CacheKey.GRID_SPATIAL_INDEX_CACHE);
-    }
-
-    @Bean
-    @Qualifier("volatileCache")
-    public IMap<WorldObjectId, WorldObject> volatileCache(HazelcastInstance instance) {
-        return instance.getMap(CacheKey.VOLATILE_CACHE);
+    @PreDestroy
+    public void shutdownResources() {
+        if (redisConnection != null) {
+            redisConnection.close();
+        }
+        if (redisClient != null) {
+            redisClient.shutdown();
+        }
+        if (blockingScheduler != null) {
+            blockingScheduler.dispose();
+        }
     }
 }

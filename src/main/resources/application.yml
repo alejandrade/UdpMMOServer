@@ -15,11 +15,14 @@ vertx:
     password: example
     max-pool-size: 10
 
-
-
 reactor:
   blocking-scheduler:
     max-threads: 100
     max-queue-size: 100000
     thread-name-prefix: default-reactor-worker
     ttl-seconds: 60
+
+
+cache:
+  player:
+    ttl: 1h

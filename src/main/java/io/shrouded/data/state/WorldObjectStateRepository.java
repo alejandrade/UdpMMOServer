@@ -1,8 +1,6 @@
-package io.shrouded.data.world;
+package io.shrouded.data.state;
 
-import com.hazelcast.map.IMap;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,26 +13,23 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-final class WorldObjectRepository {
+public final class WorldObjectStateRepository {
 
     private static final int CELL_SIZE = 100;
 
     private final Scheduler scheduler;
 
-    @Qualifier("volatileCache")
-    private final IMap<WorldObjectId, WorldObject> volatileCache;
-
-    @Qualifier("gridSpatialIndex")
-    private final IMap<GridCellId, Set<WorldObjectId>> gridMap;
+    private final ConcurrentHashMap<WorldObjectStateId, WorldObject> worldObjectMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<GridCellId, Set<WorldObjectStateId>> gridMap = new ConcurrentHashMap<>();
 
     public <T extends WorldObject & HasWorldCoordinates> Mono<T> save(final T value) {
         if (value == null || value.getId() == null) {
             throw new IllegalArgumentException("Cannot save null object or object with null ID");
         }
 
-        final WorldObjectId id = value.getId();
+        final WorldObjectStateId id = value.getId();
         return Mono.fromSupplier(() -> {
-            volatileCache.put(id, value);
+            worldObjectMap.put(id, value);
             final GridCellId cell = GridCellId.fromCoordinates(value.getX(), value.getZ(), CELL_SIZE);
             gridMap.compute(cell, (k, v) -> {
                 if (v == null) v = ConcurrentHashMap.newKeySet();
@@ -45,23 +40,23 @@ final class WorldObjectRepository {
         }).subscribeOn(scheduler);
     }
 
-    public <T extends WorldObject> Mono<T> findById(final WorldObjectId id, final Class<T> type) {
-        return Mono.fromCallable(() -> volatileCache.get(id))
+    public <T extends WorldObject> Mono<T> findById(final WorldObjectStateId id, final Class<T> type) {
+        return Mono.fromCallable(() -> worldObjectMap.get(id))
                 .map(obj -> obj.ofType(type))
                 .subscribeOn(scheduler);
     }
 
-    public Mono<Boolean> remove(final WorldObjectId id, final double x, final double z) {
+    public Mono<Boolean> remove(final WorldObjectStateId id, final double x, final double z) {
         return Mono.fromSupplier(() -> {
             final GridCellId cell = GridCellId.fromCoordinates(x, z, CELL_SIZE);
-            final Set<WorldObjectId> set = gridMap.get(cell);
+            final Set<WorldObjectStateId> set = gridMap.get(cell);
             if (set != null) set.remove(id);
-            return volatileCache.remove(id) != null;
+            return worldObjectMap.remove(id) != null;
         }).subscribeOn(scheduler);
     }
 
     public <T extends WorldObject> Flux<T> findAll(final Class<T> type) {
-        return Flux.defer(() -> Flux.fromIterable(volatileCache.values()))
+        return Flux.defer(() -> Flux.fromIterable(worldObjectMap.values()))
                 .map(obj -> obj.ofType(type))
                 .subscribeOn(scheduler);
     }
@@ -76,16 +71,17 @@ final class WorldObjectRepository {
             }
         }
 
-        return Mono.fromCallable(() -> gridMap.getAll(queryCells))
-                .flatMapMany(allResults -> {
-                    Set<WorldObjectId> ids = allResults.values().stream()
+        return Mono.fromSupplier(() -> {
+                    Set<WorldObjectStateId> ids = queryCells.stream()
+                            .map(gridMap::get)
                             .flatMap(Set::stream)
                             .collect(Collectors.toSet());
-                    return Flux.fromIterable(ids)
-                            .map(volatileCache::get)
-                            .map(obj -> obj.ofType(type));
-                })
+
+                    return ids.stream()
+                            .map(worldObjectMap::get)
+                            .map(obj -> obj.ofType(type))
+                            .collect(Collectors.toList());
+                }).flatMapMany(Flux::fromIterable)
                 .subscribeOn(scheduler);
     }
 }
-

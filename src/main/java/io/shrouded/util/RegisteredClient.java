@@ -1,6 +1,6 @@
 package io.shrouded.util;
 
-import io.shrouded.data.player.PlayerId;
+import io.shrouded.data.entity.player.PlayerId;
 
 import java.net.InetSocketAddress;
 import java.time.Instant;

@@ -1,6 +1,6 @@
 package io.shrouded.util;
 
-import io.shrouded.data.player.PlayerId;
+import io.shrouded.data.entity.player.PlayerId;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

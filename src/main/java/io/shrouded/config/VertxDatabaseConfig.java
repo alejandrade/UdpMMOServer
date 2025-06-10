@@ -7,14 +7,19 @@ import io.vertx.pgclient.PgBuilder;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ThreadFactory;
 
 @Configuration
 public class VertxDatabaseConfig {
+
+    private Pool pgPool;
+    private Vertx vertx;
 
     @Bean
     public Pool pgPool(Vertx vertx,
@@ -35,28 +40,34 @@ public class VertxDatabaseConfig {
 
         PoolOptions poolOptions = new PoolOptions().setMaxSize(maxPoolSize);
 
-        Pool pool = PgBuilder.pool()
+        this.pgPool = PgBuilder.pool()
                 .with(poolOptions)
                 .connectingTo(connectOptions)
                 .using(vertx)
                 .build();
 
-        // ✅ Check connectivity at startup
-        pool.getConnection()
+        // Optional: check connectivity
+        this.pgPool.getConnection()
                 .toCompletionStage()
                 .toCompletableFuture()
-                .get(5, java.util.concurrent.TimeUnit.SECONDS);
+                .get(5, TimeUnit.SECONDS);
 
-        return pool;
+        return this.pgPool;
     }
 
     @Bean
     public Vertx vertx() {
-        // You could also use a custom thread pool if needed
-        VertxOptions options = new VertxOptions()
-                .setWorkerPoolSize(10);
-
-        return Vertx.vertx(options);
+        this.vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(10));
+        return this.vertx;
     }
 
+    @PreDestroy
+    public void shutdown() {
+        if (pgPool != null) {
+            pgPool.close();
+        }
+        if (vertx != null) {
+            vertx.close();
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package io.shrouded.recievers.connect;
 
+import io.shrouded.data.entity.player.PlayerId;
 import io.shrouded.recievers.MessageReceiver;
 import io.shrouded.service.PlayerService;
 import io.shrouded.UdpConnectionHelper;
@@ -11,6 +12,7 @@ import io.shrouded.util.ConnectionManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import reactor.core.scheduler.Scheduler;
 
 import java.time.Instant;
 
@@ -21,6 +23,7 @@ public class ConnectReceiver implements MessageReceiver<ConnectMessageRequest, D
 
     private final PlayerService playerService;
     private final ConnectionManager connectionManager;
+    private final Scheduler scheduler;
 
     @Override
     public void handle(final String requestId,
@@ -31,8 +34,9 @@ public class ConnectReceiver implements MessageReceiver<ConnectMessageRequest, D
                     Instant.now(),
                     ResponseMessageType.success, 200, "registered", new DefaultMessageResponse()));
         } else {
-            playerService.save("id")
+            playerService.save(new PlayerId("id"))
                     .doOnNext(saved -> log.info("Created player with ID: {}", saved.getId()))
+                    .subscribeOn(scheduler)
                     .subscribe((player) -> {
                         connectionManager.addConnection(player.getId(), publisherHelper.getSocketAddress());
                         publisherHelper.respondSender(new BaseResponse<PayloadMessageResponse>(requestId,

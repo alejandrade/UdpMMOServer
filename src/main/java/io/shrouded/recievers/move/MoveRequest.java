@@ -1,6 +1,6 @@
 package io.shrouded.recievers.move;
-import io.shrouded.data.world.Quaternion;
-import io.shrouded.data.world.Vector3;
+import io.shrouded.data.state.Quaternion;
+import io.shrouded.data.state.Vector3;
 
 import io.shrouded.recievers.PayloadMessageRequest;
 import jakarta.validation.Valid;
