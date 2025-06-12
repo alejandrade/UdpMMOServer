@@ -1,11 +1,8 @@
 package io.shrouded;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
-import io.netty.util.CharsetUtil;
 import io.shrouded.data.entity.player.PlayerId;
 import io.shrouded.recievers.BaseResponse;
 import io.shrouded.recievers.ResponseMessageType;
@@ -13,7 +10,6 @@ import io.shrouded.util.ConnectionManager;
 import io.shrouded.util.RegisteredClient;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
@@ -21,12 +17,12 @@ import java.net.InetSocketAddress;
 @Slf4j
 @RequiredArgsConstructor
 public class UdpConnectionHelper {
+
     private final ChannelHandlerContext ctx;
     private final ConnectionManager connectionManager;
 
     @Getter
     private final InetSocketAddress socketAddress;
-    private final ObjectMapper mapper;
 
     public boolean isConnected() {
         return connectionManager.getUserByAddress(socketAddress) != null;
@@ -36,39 +32,42 @@ public class UdpConnectionHelper {
         return connectionManager.getUserByAddress(socketAddress);
     }
 
-    @SneakyThrows(JsonProcessingException.class)
     public void respondSender(final BaseResponse<?> baseResponse) {
-        final String json = mapper.writeValueAsString(baseResponse);
         if (!log.isDebugEnabled() && ResponseMessageType.debug.equals(baseResponse.getType())) {
             return;
         }
+        final byte[] data = baseResponse.toBytes();
         ctx.writeAndFlush(new DatagramPacket(
-                Unpooled.copiedBuffer(json, CharsetUtil.UTF_8),
+                Unpooled.wrappedBuffer(data),
                 socketAddress
         ));
     }
 
-    public void broadcast(final BaseResponse<?> baseResponse) throws JsonProcessingException {
-        final String json = mapper.writeValueAsString(baseResponse);
+    public void broadcast(final BaseResponse<?> baseResponse) {
         if (!log.isDebugEnabled() && ResponseMessageType.debug.equals(baseResponse.getType())) {
             return;
         }
+        final byte[] data = baseResponse.toBytes();
         connectionManager.forEach(((playerId, registeredClient) -> {
             ctx.writeAndFlush(new DatagramPacket(
-                    Unpooled.copiedBuffer(json, CharsetUtil.UTF_8),
+                    Unpooled.wrappedBuffer(data),
                     registeredClient.address()
             ));
         }));
     }
 
-    public void toUser(PlayerId playerId, final BaseResponse<?> baseResponse) throws JsonProcessingException {
-        final RegisteredClient user = connectionManager.getUser(playerId);
-        final String json = mapper.writeValueAsString(baseResponse);
+    public void toUser(PlayerId playerId, final BaseResponse<?> baseResponse) {
         if (!log.isDebugEnabled() && ResponseMessageType.debug.equals(baseResponse.getType())) {
             return;
         }
+        final RegisteredClient user = connectionManager.getUser(playerId);
+        if (user == null) {
+            log.warn("Attempted to send message to unknown user: {}", playerId);
+            return;
+        }
+        final byte[] data = baseResponse.toBytes();
         ctx.writeAndFlush(new DatagramPacket(
-                Unpooled.copiedBuffer(json, CharsetUtil.UTF_8),
+                Unpooled.wrappedBuffer(data),
                 user.address()
         ));
     }

@@ -4,6 +4,8 @@ import io.shrouded.data.entity.player.PlayerId;
 import io.shrouded.data.state.player.PlayerWorldObjectState;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.UUID;
 
 public record PlayerWorldObjectEntity(
         PlayerId id,
@@ -19,8 +21,22 @@ public record PlayerWorldObjectEntity(
 
         float velocityX,
         float velocityY,
-        float velocityZ
+        float velocityZ,
+
+        int health,
+        int energy,
+
+        boolean isDead,
+        boolean isInCombat,
+
+        Integer castSpellId,
+        UUID targetId,
+
+        List<Integer> activeBuffs,
+        List<Integer> activeDebuffs
 ) implements Serializable {
+
+    // ✅ This is your original game state converter (unchanged)
     public static PlayerWorldObjectEntity from(PlayerWorldObjectState source) {
         return new PlayerWorldObjectEntity(
                 new PlayerId(source.getId().value()),
@@ -33,7 +49,15 @@ public record PlayerWorldObjectEntity(
                 source.rotation().w(),
                 source.velocity().x(),
                 source.velocity().y(),
-                source.velocity().z()
+                source.velocity().z(),
+                source.health(),
+                source.energy(),
+                false,      // default isDead
+                false,      // default isInCombat
+                null,       // default castSpellId
+                null,       // default targetId
+                List.of(),  // default activeBuffs
+                List.of()   // default activeDebuffs
         );
     }
 

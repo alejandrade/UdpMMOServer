@@ -1,6 +1,7 @@
 package io.shrouded.recievers.ping;
 
 import io.shrouded.UdpConnectionHelper;
+import io.shrouded.recievers.EmptyRequest;
 import io.shrouded.recievers.MessageReceiver;
 import io.shrouded.recievers.BaseResponse;
 import io.shrouded.recievers.ResponseMessageType;
@@ -12,19 +13,16 @@ import java.time.Instant;
 
 @Component
 @RequiredArgsConstructor
-public class PingReceiver implements MessageReceiver<PingMessageRequest, PongMessageResponse> {
+public class PingReceiver implements MessageReceiver<EmptyRequest, PongMessageResponse> {
 
     private final ConnectionManager connectionManager;
 
     @Override
     public void handle(final String requestId,
-                       final PingMessageRequest payloadMessage,
+                       final EmptyRequest emptyRequest,
                        final UdpConnectionHelper publisherHelper) {
-        publisherHelper.respondSender(new BaseResponse<>(requestId,
-                Instant.now(),
+        publisherHelper.respondSender(new BaseResponse<>(
                 ResponseMessageType.pong,
-                200,
-                "pong",
                 new PongMessageResponse(connectionManager.touch(publisherHelper.getSocketAddress()))
         ));
     }

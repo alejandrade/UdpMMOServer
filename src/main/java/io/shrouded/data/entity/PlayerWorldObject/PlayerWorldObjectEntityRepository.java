@@ -23,7 +23,8 @@ public class PlayerWorldObjectEntityRepository {
                         obj.id().value(),
                         obj.positionX(), obj.positionY(), obj.positionZ(),
                         obj.rotationX(), obj.rotationY(), obj.rotationZ(), obj.rotationW(),
-                        obj.velocityX(), obj.velocityY(), obj.velocityZ()
+                        obj.velocityX(), obj.velocityY(), obj.velocityZ(),
+                        obj.health(), obj.energy()
                 ),
                 "Upsert PlayerWorldObject"
         );

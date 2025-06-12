@@ -1,4 +1,4 @@
-package io.shrouded.recievers.move;
+package io.shrouded.recievers.state;
 
 import io.shrouded.data.entity.PlayerWorldObject.PlayerWorldObjectEntity;
 import io.shrouded.data.state.player.PlayerWorldObjectState;
@@ -7,7 +7,7 @@ import io.shrouded.data.entity.PlayerWorldObject.PlayerWorldObjectEntityReposito
 import io.shrouded.data.state.WorldObjectStateId;
 import io.shrouded.recievers.MessageReceiver;
 import io.shrouded.recievers.BaseResponse;
-import io.shrouded.recievers.DefaultMessageResponse;
+import io.shrouded.recievers.EmptyResponse;
 import io.shrouded.recievers.ResponseMessageType;
 import io.shrouded.UdpConnectionHelper;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.time.temporal.ChronoUnit;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MoveReceiver implements MessageReceiver<MoveRequest, DefaultMessageResponse> {
+public class StateReceiver implements MessageReceiver<StateRequest, EmptyResponse> {
 
     private final PlayerWorldObjectEntityRepository entityRepository;
     private final PlayerWorldObjectStateRepository stateRepository;
@@ -30,7 +30,7 @@ public class MoveReceiver implements MessageReceiver<MoveRequest, DefaultMessage
 
     @Override
     public void handle(final String requestId,
-                       final MoveRequest moveRequest,
+                       final StateRequest stateRequest,
                        final UdpConnectionHelper publisherHelper) {
 
         final String playerId = publisherHelper.getUser().id().value();
@@ -39,9 +39,11 @@ public class MoveReceiver implements MessageReceiver<MoveRequest, DefaultMessage
 
         final PlayerWorldObjectState newState = new PlayerWorldObjectState(
                 worldObjectId,
-                moveRequest.position(),
-                moveRequest.rotation(),
-                moveRequest.velocity(),
+                stateRequest.position(),
+                stateRequest.rotation(),
+                stateRequest.velocity(),
+                stateRequest.health(),
+                stateRequest.energy(),
                 now
         );
 
@@ -72,12 +74,8 @@ public class MoveReceiver implements MessageReceiver<MoveRequest, DefaultMessage
                 .doOnSuccess(previousState -> {
                     publisherHelper.respondSender(
                             new BaseResponse<>(
-                                    requestId,
-                                    previousState.lastSavedUpdate(),
                                     ResponseMessageType.debug,
-                                    200,
-                                    "saved move",
-                                    new DefaultMessageResponse()
+                                    new EmptyResponse()
                             )
                     );
                 })

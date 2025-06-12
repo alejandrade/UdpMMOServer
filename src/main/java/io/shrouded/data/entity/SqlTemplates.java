@@ -14,9 +14,11 @@ public enum SqlTemplates {
             id,
             position_x, position_y, position_z,
             rotation_x, rotation_y, rotation_z, rotation_w,
-            velocity_x, velocity_y, velocity_z
+            velocity_x, velocity_y, velocity_z,
+            health, energy
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+            $12, $13
         )
         ON CONFLICT (id) DO UPDATE SET
             position_x = EXCLUDED.position_x,
@@ -28,7 +30,10 @@ public enum SqlTemplates {
             rotation_w = EXCLUDED.rotation_w,
             velocity_x = EXCLUDED.velocity_x,
             velocity_y = EXCLUDED.velocity_y,
-            velocity_z = EXCLUDED.velocity_z
+            velocity_z = EXCLUDED.velocity_z,
+            health = EXCLUDED.health,
+            energy = EXCLUDED.energy
+
     """);
 
     ;
